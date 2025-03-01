@@ -1,0 +1,46 @@
+name: Build and Upload Artifact
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Install dependencies
+        run: choco install -y rust
+
+      - name: Build press-key-cheater
+        run: cargo build --release
+
+      - name: Build show-key
+        run: |
+          cd ./show-key
+          cargo build --release
+
+      - name: Rename press-key-cheater.bat.tpl to press-key-cheater.bat
+        run: |
+          rename press-key-cheater.bat.tpl press-key-cheater.bat
+
+      - name: Upload binary as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: press-key-cheater-artifacts
+          path: |
+            target/release/press-key-cheater.exe
+            show-key/target/release/show-key.exe
+            press-key-cheater.bat

@@ -1,0 +1,35 @@
+[package]
+name = "press-key-cheater"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+tracing = "0.1"
+tracing-subscriber = "0.3"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["winuser"] }
+
+[profile.release]
+opt-level = "z"
+lto = "thin"      # link time optimizations
+codegen-units = 1
+rpath = false
+strip = true
+panic = "abort"
+
+[profile.dev.package."*"]
+opt-level = 3
+debug = false
+codegen-units = 512
+
+[profile.dev]
+incremental = true
+opt-level = 0
+strip = "debuginfo"
+debug-assertions = true
+overflow-checks = true
+debug = true
+lto = false
+codegen-units = 512
+rpath = false
