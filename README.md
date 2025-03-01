@@ -33,7 +33,7 @@ cargo clean
 ## requires toolchain
 ## rustup target add x86_64-pc-windows-gnu
 ## sudo apt-get install mingw-w64 libopus-dev
-VERSION=1.2.0-202502041611 cargo build --release --target x86_64-pc-windows-gnu
+#cargo build --release --target x86_64-pc-windows-gnu
 ```
 - push
 

@@ -2,6 +2,8 @@ use super::*;
 
 #[cfg(test)]
 mod tests {
+    use crate::parse_command::parse_command;
+
     use super::*;
 
     #[test]
