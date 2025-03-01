@@ -4,6 +4,10 @@ use std::thread::sleep;
 use std::time::Duration;
 use tracing::{debug, error, info, trace};
 
+#[cfg(test)]
+mod parse_command_test;
+mod run_sequence_test;
+
 #[derive(Debug)]
 enum InstructionType {
     Goto(usize),
@@ -40,7 +44,9 @@ impl CommandExecutor for PrintExecutor {
 }
 
 fn main() {
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
 
     let sequence = env::var("SEQUENCE").unwrap_or_else(|_| "".to_string());
     let delimiter = env::var("DELIMITER").unwrap_or_else(|_| "#".to_string());
@@ -62,16 +68,7 @@ fn main() {
 }
 
 fn sequence_decoder(delimiter: String, sequence: String) -> Result<Vec<Command>, Box<dyn Error>> {
-    let d = if delimiter == "\\n" {
-        '\n'
-    } else if delimiter == " " {
-        return Err("DELIMITER space is not possible.".into());
-    } else if delimiter.chars().count() != 1 {
-        return Err("DELIMITER is mandatory. It must be one character".into());
-    } else {
-        delimiter.chars().next().unwrap()
-    };
-
+    let d = get_delimiter(&delimiter)?;
     let mut result = Vec::new();
     for (i, cmd) in sequence.split(d).enumerate() {
         match parse_command(cmd) {
@@ -82,14 +79,28 @@ fn sequence_decoder(delimiter: String, sequence: String) -> Result<Vec<Command>,
 
     Ok(result)
 }
+
+fn get_delimiter(delimiter: &str) -> Result<char, Box<dyn Error>> {
+    if delimiter == "\\n" {
+        Ok('\n')
+    } else if delimiter == " " {
+        Err("DELIMITER space is not allowed.".into())
+    } else if delimiter.chars().count() != 1 {
+        Err("DELIMITER must be a single character.".into())
+    } else {
+        Ok(delimiter.chars().next().unwrap())
+    }
+}
+
 fn parse_command(cmd: &str) -> Result<CommandType, Box<dyn Error>> {
-    if cmd.len() == 1 {
+    if cmd.is_empty() {
+        Ok(CommandType::Instruction(InstructionType::Noop))
+    } else if cmd.len() == 1 {
         // If it's a single character, return it as a char command
         Ok(CommandType::Char(cmd.chars().next().unwrap()))
     } else {
         let parts: Vec<&str> = cmd.split_whitespace().collect();
         match parts[0] {
-            "" => Ok(CommandType::Instruction(InstructionType::Noop)),
             "REM" => Ok(CommandType::Instruction(InstructionType::Noop)),
             "GOTO" => parts
                 .get(1)
@@ -192,6 +203,9 @@ fn run_sequence(commands: &[Command], executor: &dyn CommandExecutor) {
 }
 
 fn help(err: Option<Box<dyn Error>>) {
+    if let Some(e) = err {
+        println!("\nError: {}\n", e);
+    }
     println!("Usage: PressKeyCheater");
     println!("Set environment variables:");
     println!("  SEQUENCE - the sequence of commands");
@@ -205,7 +219,4 @@ fn help(err: Option<Box<dyn Error>>) {
     println!("  LOG msg    - logs a message");
     println!("  ASCII n    - inputs the ASCII character with decimal code n");
     println!("  Any single character is treated as input");
-    if let Some(e) = err {
-        println!("Error: {}", e);
-    }
 }
