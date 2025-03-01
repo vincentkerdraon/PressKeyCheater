@@ -2,7 +2,7 @@ use super::*;
 
 #[cfg(test)]
 mod tests {
-    use crate::parse_command::parse_command;
+    use crate::{command::*, parse_command::parse_command};
 
     use super::*;
 
@@ -11,7 +11,10 @@ mod tests {
         let cmd = "a";
         let result = parse_command(cmd);
         match result {
-            Ok(CommandType::Char('a')) => (),
+            Ok(CommandType::CharAndPressType(CharAndPressType {
+                c: 'a',
+                press_type: PressType::Pressed,
+            })) => (),
             _ => panic!("Expected Ok(CommandType::Char('a')), got {:?}", result),
         }
     }
@@ -101,7 +104,10 @@ mod tests {
         let cmd = "ASCII 65";
         let result = parse_command(cmd);
         match result {
-            Ok(CommandType::Char('A')) => (),
+            Ok(CommandType::CharAndPressType(CharAndPressType {
+                c: 'A',
+                press_type: PressType::Pressed,
+            })) => (),
             _ => panic!("Expected Ok(CommandType::Char('A')), got {:?}", result),
         }
     }

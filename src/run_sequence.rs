@@ -1,4 +1,6 @@
 use super::*;
+use crate::command::*;
+use crate::command_executor::*;
 
 pub fn run_sequence(commands: &[Command], executor: &dyn CommandExecutor) {
     info!("Starting sequence execution...");
@@ -12,9 +14,9 @@ pub fn run_sequence(commands: &[Command], executor: &dyn CommandExecutor) {
         );
 
         match &commands[pos].cmd {
-            CommandType::Char(c) => {
-                trace!("Executing char command: {}", c);
-                if let Err(e) = executor.execute_command_char(*c) {
+            CommandType::CharAndPressType(c) => {
+                trace!("Executing char command: {:?}", c);
+                if let Err(e) = executor.execute_command_char(c) {
                     error!("Error executing char command: {}", e);
                 }
             }

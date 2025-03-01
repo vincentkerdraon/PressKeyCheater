@@ -1,52 +1,21 @@
+mod command;
+mod command_executor;
 mod parse_command;
 mod run_sequence;
 
+use command_executor::*;
 use parse_command::sequence_decoder;
 use run_sequence::run_sequence;
 use std::env;
 use std::error::Error;
 use std::thread::sleep;
 use std::time::Duration;
-use tracing::{debug, error, info, trace};
+use tracing::*;
 
 #[cfg(test)]
 mod parse_command_test;
+#[cfg(test)]
 mod run_sequence_test;
-
-#[derive(Debug)]
-enum InstructionType {
-    Goto(usize),
-    Noop,
-    Exit,
-    SleepMs(u64),
-    SleepUs(u64),
-    SleepS(u64),
-    Log(String),
-}
-
-#[derive(Debug)]
-enum CommandType {
-    Char(char),
-    Instruction(InstructionType),
-}
-
-#[derive(Debug)]
-struct Command {
-    cmd: CommandType,
-}
-
-trait CommandExecutor {
-    fn execute_command_char(&self, c: char) -> Result<(), Box<dyn Error>>;
-}
-
-struct PrintExecutor;
-
-impl CommandExecutor for PrintExecutor {
-    fn execute_command_char(&self, c: char) -> Result<(), Box<dyn Error>> {
-        println!("{}", c);
-        Ok(())
-    }
-}
 
 fn main() {
     tracing_subscriber::fmt()
@@ -56,18 +25,19 @@ fn main() {
     let sequence = env::var("SEQUENCE").unwrap_or_else(|_| "".to_string());
     let delimiter = env::var("DELIMITER").unwrap_or_else(|_| "#".to_string());
 
-    if sequence.is_empty() {
-        help(Some("SEQUENCE cannot be empty".into()));
-        return;
+    let executor: &dyn CommandExecutor;
+    #[cfg(not(windows))]
+    {
+        println!("This is not a Windows platform, key press mocked");
+        executor = &PrintExecutor
     }
-
-    if sequence.ends_with(&delimiter) {
-        help(Some("SEQUENCE cannot end with a delimiter".into()));
-        return;
+    #[cfg(windows)]
+    {
+        executor = &WindowsPressExecutor
     }
 
     match sequence_decoder(delimiter, sequence) {
-        Ok(cmds) => run_sequence(&cmds, &PrintExecutor),
+        Ok(cmds) => run_sequence(&cmds, executor),
         Err(e) => help(Some(e)),
     }
 }
@@ -79,14 +49,23 @@ fn help(err: Option<Box<dyn Error>>) {
     println!("Usage: PressKeyCheater");
     println!("Set environment variables:");
     println!("  SEQUENCE - the sequence of commands");
-    println!("  DELIMITER - single character delimiter for commands");
-    println!("Commands:");
+    println!(
+        "  DELIMITER - single character delimiter for commands (default: #, excluded: _ ^ space)"
+    );
+    println!("Commands to input a character:");
+    println!("  *          - Any single character is treated as input (press+release)");
+    println!("  ^*         - Press this character");
+    println!("  _*         - Release this character");
+    println!("  ASCII n    - inputs the ASCII character with decimal code n (press+release)");
+    println!("  ^ASCII n   - press the ASCII character with decimal code n");
+    println!("  _ASCII n   - release the ASCII character with decimal code n");
+    println!("Commands for instructions:");
+    println!("  REM *      - this is a comment, ignored");
     println!("  GOTO n     - jumps to position n (starts at 0)");
     println!("  EXIT       - stops execution");
     println!("  SLEEPMS n  - sleeps n milliseconds");
     println!("  SLEEPUS n  - sleeps n microseconds");
     println!("  SLEEPS n   - sleeps n seconds");
     println!("  LOG msg    - logs a message");
-    println!("  ASCII n    - inputs the ASCII character with decimal code n");
-    println!("  Any single character is treated as input");
+    //FIXME example
 }
