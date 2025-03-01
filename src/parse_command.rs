@@ -1,7 +1,6 @@
 use super::*;
 use crate::command::*;
 
-
 pub fn sequence_decoder(
     delimiter: String,
     sequence: String,
@@ -64,9 +63,8 @@ pub fn parse_command(cmd: &str) -> Result<CommandType, Box<dyn Error>> {
                     c: c,
                     press_type: PressType::Up,
                 }));
-            } else {
-                return Err(format!("Invalid line {}", cmd).into());
             }
+            unreachable!()
         }
         if cmd.starts_with("_") {
             if let Some(c) = cmd.chars().nth(1) {
@@ -74,9 +72,8 @@ pub fn parse_command(cmd: &str) -> Result<CommandType, Box<dyn Error>> {
                     c: c,
                     press_type: PressType::Down,
                 }));
-            } else {
-                return Err(format!("Invalid line {}", cmd).into());
             }
+            unreachable!()
         }
         return Err(format!("Invalid line {}", cmd).into());
     }
@@ -119,36 +116,26 @@ pub fn parse_command(cmd: &str) -> Result<CommandType, Box<dyn Error>> {
             Ok(CommandType::Instruction(InstructionType::Log(log_message)))
         }
 
-        "ASCII" => parts
-            .get(1)
-            .and_then(|v| v.parse::<u8>().ok())
-            .map(|v| {
-                CommandType::CharAndPressType(CharAndPressType {
-                    c: v as char,
-                    press_type: PressType::Pressed,
-                })
-            })
-            .ok_or_else(|| "ASCII requires a valid number".into()),
-        "_ASCII" => parts
-            .get(1)
-            .and_then(|v| v.parse::<u8>().ok())
-            .map(|v| {
-                CommandType::CharAndPressType(CharAndPressType {
-                    c: v as char,
-                    press_type: PressType::Down,
-                })
-            })
-            .ok_or_else(|| "_ASCII requires a valid number".into()),
-        "^ASCII" => parts
-            .get(1)
-            .and_then(|v| v.parse::<u8>().ok())
-            .map(|v| {
-                CommandType::CharAndPressType(CharAndPressType {
-                    c: v as char,
-                    press_type: PressType::Up,
-                })
-            })
-            .ok_or_else(|| "^ASCII requires a valid number".into()),
+        "ASCII" | "_ASCII" | "^ASCII" => {
+            if let Some(n) = parts.get(1).and_then(|v| v.parse::<u8>().ok()) {
+                if let Some(c) = char::from_u32(n as u32) {
+                    let press_type = match parts[0] {
+                        "ASCII" => PressType::Pressed,
+                        "_ASCII" => PressType::Down,
+                        "^ASCII" => PressType::Up,
+                        _ => unreachable!(),
+                    };
+                    Ok(CommandType::CharAndPressType(CharAndPressType {
+                        c,
+                        press_type,
+                    }))
+                } else {
+                    Err("ASCII value is not a valid character.".into())
+                }
+            } else {
+                Err("ASCII requires a valid number".into())
+            }
+        }
 
         _ => Err(format!("Unknown command {}", parts[0]).into()), // Return an error for unknown commands
     }

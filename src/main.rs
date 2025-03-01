@@ -47,6 +47,7 @@ fn help(err: Option<Box<dyn Error>>) {
         println!("\nError: {}\n", e);
     }
     println!("Usage: PressKeyCheater");
+
     println!("Set environment variables:");
     println!("  SEQUENCE - the sequence of commands");
     println!(
@@ -59,6 +60,7 @@ fn help(err: Option<Box<dyn Error>>) {
     println!("  ASCII n    - inputs the ASCII character with decimal code n (press+release)");
     println!("  ^ASCII n   - press the ASCII character with decimal code n");
     println!("  _ASCII n   - release the ASCII character with decimal code n");
+
     println!("Commands for instructions:");
     println!("  REM *      - this is a comment, ignored");
     println!("  GOTO n     - jumps to position n (starts at 0)");
@@ -67,5 +69,11 @@ fn help(err: Option<Box<dyn Error>>) {
     println!("  SLEEPUS n  - sleeps n microseconds");
     println!("  SLEEPS n   - sleeps n seconds");
     println!("  LOG msg    - logs a message");
-    //FIXME example
+
+    println!("Examples:");
+    println!("  SEQUENCE=\"H#e#l#l#o# #W#o#r#l#d\"");
+    println!("  SEQUENCE=\"^A#SLEEPMS 500#_A#ASCII 66#GOTO 0\"");
+    println!("  SEQUENCE=\"H.e.l.l.o.#\" DELIMITER=\".\"");
+    println!("Suggested call: create a .bat each time, declaring env var and calling this program. Sequence delimiter can be a line break");
+    println!("If you use GOTO, always put a sleep, because it will be fast as fuck.");
 }
