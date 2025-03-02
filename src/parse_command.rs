@@ -237,7 +237,7 @@ pub fn parse_command(cmd: &str) -> Result<CommandType, Box<dyn Error>> {
                     };
                     Ok(CommandType::CharAndPressType(CharAndPressType {
                         vk: vk_code,
-                        press_type: press_type,
+                        press_type,
                     }))
                 } else {
                     Err(format!("Unknown virtual key: {}", key_name).into())

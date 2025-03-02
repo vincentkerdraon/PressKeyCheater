@@ -37,9 +37,6 @@ jobs:
       - name: prepare artifact
         shell: cmd
         run: |
-          type press-key-cheater.bat.tpl
-          type target\release\press-key-cheater.exe
-          type show-key\target\release\show-key.exe
           ren press-key-cheater.bat.tpl press-key-cheater.bat
           move target\release\press-key-cheater.exe press-key-cheater.exe
           move show-key\target\release\show-key.exe show-key.exe
