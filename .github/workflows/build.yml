@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: choco install -y rust
 
+      - name: Run test press-key-cheater
+        run: cargo test
+
       - name: Build press-key-cheater
         run: cargo build --release
 
@@ -32,9 +35,9 @@ jobs:
           cd ./show-key
           cargo build --release
 
-      - name: Rename press-key-cheater.bat.tpl to press-key-cheater.bat
-        run: |
-          rename press-key-cheater.bat.tpl press-key-cheater.bat
+      - name: Rename bat file
+        run: ren press-key-cheater.bat.tpl press-key-cheater.bat
+        shell: cmd
 
       - name: Upload binary as artifact
         uses: actions/upload-artifact@v4
