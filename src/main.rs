@@ -14,8 +14,6 @@ use tracing::*;
 
 #[cfg(test)]
 mod parse_command_test;
-#[cfg(test)]
-mod run_sequence_test;
 
 fn main() {
     tracing_subscriber::fmt()
@@ -25,16 +23,14 @@ fn main() {
     let sequence = env::var("SEQUENCE").unwrap_or_else(|_| "".to_string());
     let delimiter = env::var("DELIMITER").unwrap_or_else(|_| "#".to_string());
 
-    let executor: &dyn CommandExecutor;
     #[cfg(not(windows))]
     {
-        println!("This is not a Windows platform, key press mocked");
-        executor = &PrintExecutor
+        let executor: &dyn CommandExecutor = &PrintExecutor;
+        warn!("This is not a Windows platform, key press mocked");
     }
+
     #[cfg(windows)]
-    {
-        executor = &WindowsPressExecutor
-    }
+    let executor: &dyn CommandExecutor = &WindowsPressExecutor;
 
     match sequence_decoder(delimiter, sequence) {
         Ok(cmds) => run_sequence(&cmds, executor),
@@ -47,6 +43,7 @@ fn help(err: Option<Box<dyn Error>>) {
         println!("\nError: {}\n", e);
     }
     println!("Usage: PressKeyCheater");
+    println!("Once started, this will execute the sequence. Even if it means destroying your computer...");
 
     println!("Set environment variables:");
     println!("  SEQUENCE - the sequence of commands");
@@ -54,12 +51,9 @@ fn help(err: Option<Box<dyn Error>>) {
         "  DELIMITER - single character delimiter for commands (default: #, excluded: _ ^ space)"
     );
     println!("Commands to input a character:");
-    println!("  *          - Any single character is treated as input (press+release)");
-    println!("  ^*         - Press this character");
-    println!("  _*         - Release this character");
-    println!("  ASCII n    - inputs the ASCII character with decimal code n (press+release)");
-    println!("  ^ASCII n   - press the ASCII character with decimal code n");
-    println!("  _ASCII n   - release the ASCII character with decimal code n");
+    println!("  VK *       - the code for a key like NUMPAD0 or SHIFT (press+release)");
+    println!("  ^VK *      - Release this key (release only)");
+    println!("  _VK *      - Press this key (no release)");
 
     println!("Commands for instructions:");
     println!("  REM *      - this is a comment, ignored");
@@ -71,9 +65,11 @@ fn help(err: Option<Box<dyn Error>>) {
     println!("  LOG msg    - logs a message");
 
     println!("Examples:");
-    println!("  SEQUENCE=\"H#e#l#l#o# #W#o#r#l#d\"");
-    println!("  SEQUENCE=\"^A#SLEEPMS 500#_A#ASCII 66#GOTO 0\"");
-    println!("  SEQUENCE=\"H.e.l.l.o.#\" DELIMITER=\".\"");
+    println!("  SEQUENCE=\"VK H.VK E.VK L.VK L.VK O\" DELIMITER=\".\"");
+    println!("     (default delimiter: #)");
+    println!("  SEQUENCE=\"VK H#VK E#VK L#VK L#VK O#VK SPACE#SLEEPS 1#GOTO 0\"");
+    println!("     (If you use GOTO, always put a sleep, because it will be fast as fuck.)");
+    println!("  SEQUENCE=\"VK A#_VK SHIFT#VK A#^VK SHIFT#VK A\"");
     println!("Suggested call: create a .bat each time, declaring env var and calling this program. Sequence delimiter can be a line break");
-    println!("If you use GOTO, always put a sleep, because it will be fast as fuck.");
+    println!("");
 }

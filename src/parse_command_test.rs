@@ -7,15 +7,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_command_char() {
-        let cmd = "a";
+    fn test_parse_command_vk() {
+        let cmd = "VK A";
         let result = parse_command(cmd);
         match result {
             Ok(CommandType::CharAndPressType(CharAndPressType {
-                c: 'a',
+                vk,
                 press_type: PressType::Pressed,
-            })) => (),
-            _ => panic!("Expected Ok(CommandType::Char('a')), got {:?}", result),
+            })) if vk == 0x41 => (),
+            _ => panic!(
+                "Expected Ok(CommandType::CharAndPressType('a', Pressed)), got {:?}",
+                result
+            ),
         }
     }
 
@@ -94,32 +97,6 @@ mod tests {
             }
             _ => panic!(
                 "Expected Ok(CommandType::Instruction(InstructionType::Log(..))), got {:?}",
-                result
-            ),
-        }
-    }
-
-    #[test]
-    fn test_parse_command_ascii_valid() {
-        let cmd = "ASCII 65";
-        let result = parse_command(cmd);
-        match result {
-            Ok(CommandType::CharAndPressType(CharAndPressType {
-                c: 'A',
-                press_type: PressType::Pressed,
-            })) => (),
-            _ => panic!("Expected Ok(CommandType::Char('A')), got {:?}", result),
-        }
-    }
-
-    #[test]
-    fn test_parse_command_ascii_invalid() {
-        let cmd = "ASCII";
-        let result = parse_command(cmd);
-        match result {
-            Err(e) => assert_eq!(e.to_string(), "ASCII requires a valid number"),
-            _ => panic!(
-                "Expected Err with message 'ASCII requires a valid number', got {:?}",
                 result
             ),
         }

@@ -6,8 +6,9 @@ edition = "2021"
 [dependencies]
 tracing = "0.1"
 tracing-subscriber = "0.3"
-winapi = { version = "0.3", features = ["winuser"] }
 
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["winuser"] }
 
 [profile.release]
 opt-level = "z"

@@ -9,9 +9,11 @@ pub enum InstructionType {
     Log(String),
 }
 
+pub type VK = u16;
+
 #[derive(Debug)]
 pub struct CharAndPressType {
-    pub c: char,
+    pub vk: VK,
     pub press_type: PressType,
 }
 
